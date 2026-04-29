@@ -12,6 +12,7 @@ import { Observable, map } from 'rxjs';
 import { changesLayout } from 'src/app/store/layouts/layout.actions';
 import { getLayoutMode } from 'src/app/store/layouts/layout.selector';
 import { RootReducerState } from 'src/app/store';
+import { KeycloakService } from '../../auth/keycloak.service';
 
 @Component({
   selector: 'app-topbar',
@@ -36,6 +37,7 @@ export class TopbarComponent implements OnInit {
 
   constructor(@Inject(DOCUMENT) private document: any, private router: Router, private authService: AuthenticationService,
     private authFackservice: AuthfakeauthenticationService,
+    private keycloakService: KeycloakService,
     public languageService: LanguageService,
     public translate: TranslateService,
     public _cookiesService: CookieService, public store: Store<RootReducerState>) {
@@ -98,7 +100,12 @@ export class TopbarComponent implements OnInit {
   /**
    * Logout the user
    */
-  logout() {
+  async logout() {
+    if (environment.defaultauth === 'keycloak') {
+      await this.keycloakService.logout();
+      return;
+    }
+
     if (environment.defaultauth === 'firebase') {
       this.authService.logout();
     } else {

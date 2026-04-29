@@ -1,7 +1,6 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { emailSentBarChart, monthlyEarningChart } from './data';
 import { ChartType } from './dashboard.model';
-import { BsModalService, BsModalRef, ModalDirective } from 'ngx-bootstrap/modal';
 import { EventService } from '../../../core/services/event.service';
 
 import { ConfigService } from '../../../core/services/config.service';
@@ -12,23 +11,16 @@ import { ConfigService } from '../../../core/services/config.service';
   styleUrls: ['./default.component.scss']
 })
 export class DefaultComponent implements OnInit {
-  modalRef?: BsModalRef;
   isVisible: string;
 
   emailSentBarChart: ChartType;
   monthlyEarningChart: ChartType;
   transactions: any;
   statData: any;
-  config:any = {
-    backdrop: true,
-    ignoreBackdropClick: true
-  };
 
   isActive: string;
 
-  @ViewChild('content') content;
-  @ViewChild('center', { static: false }) center?: ModalDirective;
-  constructor(private modalService: BsModalService, private configService: ConfigService, private eventService: EventService) {
+  constructor(private configService: ConfigService, private eventService: EventService) {
   }
 
   ngOnInit() {
@@ -56,12 +48,6 @@ export class DefaultComponent implements OnInit {
     this.fetchData();
   }
 
-  ngAfterViewInit() {
-    setTimeout(() => {
-     this.center?.show()
-    }, 2000);
-  }
-
   /**
    * Fetches the data
    */
@@ -74,9 +60,6 @@ export class DefaultComponent implements OnInit {
       this.transactions = data.transactions;
       this.statData = data.statData;
     });
-  }
-  opencenterModal(template: TemplateRef<any>) {
-    this.modalRef = this.modalService.show(template);
   }
   weeklyreport() {
     this.isActive = 'week';

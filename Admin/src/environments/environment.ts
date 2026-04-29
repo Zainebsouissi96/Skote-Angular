@@ -4,7 +4,14 @@
 
 export const environment = {
   production: false,
-  defaultauth: 'fakebackend',
+  defaultauth: 'keycloak',
+  apiBaseUrl: 'http://localhost:8081/api',
+  keycloak: {
+    url: 'http://localhost:8080',
+    realm: 'rhcamunda-realm',
+    clientId: 'angular-frontend',
+    onLoad: 'check-sso'
+  },
   firebaseConfig: {
     apiKey: "",
     authDomain: "",

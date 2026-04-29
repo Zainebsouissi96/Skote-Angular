@@ -7,6 +7,7 @@ import { LanguageService } from '../../core/services/language.service';
 import { EventService } from '../../core/services/event.service';
 import { AuthenticationService } from '../../core/services/auth.service';
 import { AuthfakeauthenticationService } from '../../core/services/authfake.service';
+import { KeycloakService } from '../../auth/keycloak.service';
 
 import { DOCUMENT } from '@angular/common';
 
@@ -46,6 +47,7 @@ export class HorizontaltopbarComponent implements OnInit, AfterViewInit {
   // tslint:disable-next-line: max-line-length
   constructor(@Inject(DOCUMENT) private document: any, private router: Router, private eventService: EventService, private authService: AuthenticationService,
     private authFackservice: AuthfakeauthenticationService,
+    private keycloakService: KeycloakService,
     public languageService: LanguageService,
     // tslint:disable-next-line: variable-name
     public _cookiesService: CookieService) {
@@ -84,7 +86,12 @@ export class HorizontaltopbarComponent implements OnInit, AfterViewInit {
   /**
    * Logout the user
    */
-  logout() {
+  async logout() {
+    if (environment.defaultauth === 'keycloak') {
+      await this.keycloakService.logout();
+      return;
+    }
+
     if (environment.defaultauth === 'firebase') {
       this.authService.logout();
     } else {
@@ -276,7 +283,7 @@ export class HorizontaltopbarComponent implements OnInit, AfterViewInit {
    * Initialize
    */
   initialize(): void {
-    this.menuItems = MENU;
+    this.menuItems = this.filterMenuByRoles(MENU);
   }
 
   /**
@@ -285,6 +292,21 @@ export class HorizontaltopbarComponent implements OnInit, AfterViewInit {
    */
   hasItems(item: MenuItem) {
     return item.subItems !== undefined ? item.subItems.length > 0 : false;
+  }
+
+  private filterMenuByRoles(items: MenuItem[]): MenuItem[] {
+    return items
+      .map((item) => ({
+        ...item,
+        subItems: item.subItems ? this.filterMenuByRoles(item.subItems) : undefined
+      }))
+      .filter((item) => {
+        if (environment.defaultauth === 'keycloak' && !this.keycloakService.hasAnyRole(item.roles)) {
+          return false;
+        }
+
+        return item.subItems ? item.subItems.length > 0 : true;
+      });
   }
   _activateMenuDropdown() {
     this._removeAllClass('mm-active');

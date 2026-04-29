@@ -5,6 +5,8 @@ import { AuthfakeauthenticationService } from '../../../core/services/authfake.s
 import { login } from 'src/app/store/Authentication/authentication.actions';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { environment } from '../../../../environments/environment';
+import { KeycloakService } from '../../../auth/keycloak.service';
 
 @Component({
   selector: 'app-login2',
@@ -17,7 +19,7 @@ import { Store } from '@ngrx/store';
 export class Login2Component implements OnInit {
 
   constructor(private formBuilder: UntypedFormBuilder, private route: ActivatedRoute, private router: Router, private authenticationService: AuthenticationService,
-    private authFackservice: AuthfakeauthenticationService, public store: Store) { }
+    private authFackservice: AuthfakeauthenticationService, public store: Store, private keycloakService: KeycloakService) { }
   loginForm: UntypedFormGroup;
   submitted: any = false;
   error: any = '';
@@ -26,13 +28,22 @@ export class Login2Component implements OnInit {
   // set the currenr year
   year: number = new Date().getFullYear();
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     document.body.classList.add("auth-body-bg");
     this.loginForm = this.formBuilder.group({
       email: ['admin@themesbrand.com', [Validators.required, Validators.email]],
       password: ['123456', [Validators.required]],
     });
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+
+    if (environment.defaultauth === 'keycloak') {
+      if (this.keycloakService.isLoggedIn()) {
+        await this.router.navigateByUrl(this.returnUrl);
+        return;
+      }
+
+      await this.keycloakService.login(`${window.location.origin}${this.returnUrl}`);
+    }
   }
 
   // swiper config
@@ -51,7 +62,11 @@ export class Login2Component implements OnInit {
    */
   onSubmit() {
     this.submitted = true;
-    this.submitted = true;
+
+    if (environment.defaultauth === 'keycloak') {
+      this.keycloakService.login(`${window.location.origin}${this.returnUrl}`);
+      return;
+    }
 
     const email = this.f['email'].value; // Get the username from the form
     const password = this.f['password'].value; // Get the password from the form

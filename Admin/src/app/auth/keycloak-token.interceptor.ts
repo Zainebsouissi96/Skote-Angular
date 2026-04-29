@@ -1,26 +1,53 @@
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest
+} from '@angular/common/http';
+import { Observable, from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import { KeycloakService } from './keycloak.service';
 
 @Injectable()
 export class KeycloakTokenInterceptor implements HttpInterceptor {
   constructor(private keycloakService: KeycloakService) {}
 
-  // @ts-ignore - contournement d’une incompatibilité de typage résiduelle
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Ne pas intercepter les requêtes vers Keycloak
-    if (req.url.includes('/auth/') || req.url.includes('keycloak')) {
-      return next.handle(req);
+  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    if (!this.shouldAttachToken(request)) {
+      return next.handle(request);
     }
 
-    const token = this.keycloakService.getToken();
-    if (token) {
-      const cloned = req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` }
-      });
-      return next.handle(cloned);
+    return from(this.keycloakService.getToken()).pipe(
+      switchMap((token) => {
+        if (!token) {
+          return next.handle(request);
+        }
+
+        return next.handle(request.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        }));
+      })
+    );
+  }
+
+  private shouldAttachToken(request: HttpRequest<unknown>): boolean {
+    if (!this.keycloakService.isEnabled()) {
+      return false;
     }
-    return next.handle(req);
+
+    const url = request.url.toLowerCase();
+    const keycloakUrl = environment.keycloak.url.toLowerCase();
+
+    if (url.includes('/assets/') || url.endsWith('.json') || url.startsWith(keycloakUrl)) {
+      return false;
+    }
+
+    return url.startsWith('/api')
+      || url.startsWith(environment.apiBaseUrl.toLowerCase())
+      || !url.startsWith('http');
   }
 }

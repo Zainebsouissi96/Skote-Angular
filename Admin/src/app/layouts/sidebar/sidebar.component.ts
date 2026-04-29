@@ -8,6 +8,8 @@ import { HttpClient } from '@angular/common/http';
 import { MENU } from './menu';
 import { MenuItem } from './menu.model';
 import { TranslateService } from '@ngx-translate/core';
+import { environment } from '../../../environments/environment';
+import { KeycloakService } from '../../auth/keycloak.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -28,7 +30,7 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnChanges {
 
   @ViewChild('sideMenu') sideMenu: ElementRef;
 
-  constructor(private eventService: EventService, private router: Router, public translate: TranslateService, private http: HttpClient) {
+  constructor(private eventService: EventService, private router: Router, public translate: TranslateService, private http: HttpClient, private keycloakService: KeycloakService) {
     router.events.forEach((event) => {
       if (event instanceof NavigationEnd) {
         this._activateMenuDropdown();
@@ -139,7 +141,7 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnChanges {
    * Initialize
    */
   initialize(): void {
-    this.menuItems = MENU;
+    this.menuItems = this.filterMenuByRoles(MENU);
   }
 
   /**
@@ -148,5 +150,20 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnChanges {
    */
   hasItems(item: MenuItem) {
     return item.subItems !== undefined ? item.subItems.length > 0 : false;
+  }
+
+  private filterMenuByRoles(items: MenuItem[]): MenuItem[] {
+    return items
+      .map((item) => ({
+        ...item,
+        subItems: item.subItems ? this.filterMenuByRoles(item.subItems) : undefined
+      }))
+      .filter((item) => {
+        if (environment.defaultauth === 'keycloak' && !this.keycloakService.hasAnyRole(item.roles)) {
+          return false;
+        }
+
+        return item.subItems ? item.subItems.length > 0 : true;
+      });
   }
 }

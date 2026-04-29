@@ -1,6 +1,13 @@
 export const environment = {
   production: true,
-  defaultauth: 'fakebackend',
+  defaultauth: 'keycloak',
+  apiBaseUrl: '/api',
+  keycloak: {
+    url: 'https://keycloak.example.com',
+    realm: 'rhcamunda-realm',
+    clientId: 'angular-frontend',
+    onLoad: 'check-sso'
+  },
   firebaseConfig: {
     apiKey: '',
     authDomain: '',

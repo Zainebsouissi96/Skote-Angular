@@ -24,7 +24,9 @@ export class AuthenticationEffects {
             }),
             catchError((error) => of(RegisterFailure({ error })))
           );
-        } else {
+        }
+
+        if (environment.defaultauth === 'firebase') {
           return this.AuthenticationService.register({ email, username, password }).pipe(
             map((user) => {
               this.router.navigate(['/auth/login']);
@@ -32,6 +34,8 @@ export class AuthenticationEffects {
             })
           )
         }
+
+        return of(RegisterFailure({ error: 'Registration is managed by Keycloak.' }));
       })
     )
   );
@@ -52,13 +56,17 @@ export class AuthenticationEffects {
               }
               return loginSuccess({ user });
             }),
-            catchError((error) => of(loginFailure({ error })), // Closing parenthesis added here
-            ));
-        } else if (environment.defaultauth === "firebase") {
+            catchError((error) => of(loginFailure({ error })))
+          );
+        }
+
+        if (environment.defaultauth === "firebase") {
           return this.AuthenticationService.login(email, password).pipe(map((user) => {
             return loginSuccess({ user });
           }))
         }
+
+        return of(loginFailure({ error: 'Authentication is handled by Keycloak.' }));
       })
     )
   );

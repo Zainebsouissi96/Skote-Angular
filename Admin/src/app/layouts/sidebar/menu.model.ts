@@ -8,4 +8,6 @@ export interface MenuItem {
     badge?: any;
     parentId?: number;
     isLayout?: boolean;
+    isCollapsed?: boolean;
+    roles?: string[];
 }

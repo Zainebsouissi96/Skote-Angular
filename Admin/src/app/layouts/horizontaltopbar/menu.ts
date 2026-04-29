@@ -1,4 +1,5 @@
 import { MenuItem } from './menu.model';
+import { RH_ROLES } from '../../auth/keycloak-roles';
 
 export const MENU: MenuItem[] = [
     {
@@ -6,6 +7,7 @@ export const MENU: MenuItem[] = [
         label: 'MENUITEMS.DASHBOARDS.TEXT',
         icon: 'bx-home-circle',
         isCollapsed: false,
+        roles: [RH_ROLES.RH, RH_ROLES.ADMIN],
         subItems: [
             {
                 id: 2,
@@ -420,6 +422,7 @@ export const MENU: MenuItem[] = [
                 label: 'MENUITEMS.CONTACTS.TEXT',
                 isCollapsed: false,
                 icon: 'bxs-user-detail',
+                roles: [RH_ROLES.RH, RH_ROLES.ADMIN],
                 parentId: 30,
                 subItems: [
                     {
@@ -881,4 +884,3 @@ export const MENU: MenuItem[] = [
         ]
     }
 ];
-
